@@ -1,0 +1,279 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Spot It Generator</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+</head>
+<body>
+    <div class="app-container max-w-6xl mx-auto px-6 py-8 min-h-screen">
+        <!-- Header -->
+        <header class="text-center mb-12">
+            <h1 class="text-4xl font-bold tracking-tight mb-2">
+                Spot It<span class="bg-gradient-to-r from-accent-orange to-accent-yellow bg-clip-text text-transparent ml-1">Generator</span>
+            </h1>
+            <p class="text-gray-400 text-lg font-light">Create custom Spot It cards with AI-generated images</p>
+        </header>
+
+        <!-- Step Indicator -->
+        <div class="flex items-center justify-center gap-0 mb-12 px-8 flex-wrap">
+            <div class="step flex items-center gap-3 px-5 py-3 rounded-full bg-surface-800 border border-accent-orange opacity-100 shadow-[0_0_30px_rgba(255,107,53,0.3)]" data-step="1">
+                <span class="step-badge step-badge-active">1</span>
+                <span class="text-sm font-medium text-gray-100">API Keys</span>
+            </div>
+            <div class="w-10 h-0.5 bg-surface-500"></div>
+            <div class="step flex items-center gap-3 px-5 py-3 rounded-full bg-surface-800 border border-surface-500 opacity-50" data-step="2">
+                <span class="step-badge">2</span>
+                <span class="text-sm font-medium text-gray-400">Symbols</span>
+            </div>
+            <div class="w-10 h-0.5 bg-surface-500"></div>
+            <div class="step flex items-center gap-3 px-5 py-3 rounded-full bg-surface-800 border border-surface-500 opacity-50" data-step="3">
+                <span class="step-badge">3</span>
+                <span class="text-sm font-medium text-gray-400">Generate</span>
+            </div>
+            <div class="w-10 h-0.5 bg-surface-500"></div>
+            <div class="step flex items-center gap-3 px-5 py-3 rounded-full bg-surface-800 border border-surface-500 opacity-50" data-step="4">
+                <span class="step-badge">4</span>
+                <span class="text-sm font-medium text-gray-400">Print</span>
+            </div>
+        </div>
+
+        <!-- Main Content -->
+        <main>
+            <!-- Step 1: API Keys -->
+            <section class="panel active" id="panel-api">
+                <div class="p-8 border-b border-surface-500">
+                    <h2 class="text-2xl font-semibold mb-2">Enter Your API Keys</h2>
+                    <p class="text-gray-400">Your keys are stored locally in your browser and never sent to any server except their respective APIs.</p>
+                </div>
+                <div class="p-8">
+                    <!-- OpenAI API Key -->
+                    <div class="mb-6">
+                        <label for="openai-key" class="block text-sm font-medium text-gray-400 mb-2">
+                            OpenAI API Key
+                            <span class="text-gray-500 font-normal ml-1">(for generating symbol descriptions)</span>
+                        </label>
+                        <div class="relative">
+                            <input type="password" id="openai-key" placeholder="sk-..." autocomplete="off"
+                                   class="input-field pr-12">
+                            <button type="button" id="toggle-openai-visibility" 
+                                    class="absolute right-3 top-1/2 -translate-y-1/2 p-2 text-gray-500 hover:text-gray-100 transition-colors"
+                                    title="Show/hide key">
+                                <svg class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                    <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
+                                    <circle cx="12" cy="12" r="3"></circle>
+                                </svg>
+                            </button>
+                        </div>
+                        <p class="mt-2 text-sm text-gray-500">
+                            Get your API key from <a href="https://platform.openai.com/api-keys" target="_blank" class="text-accent-orange hover:text-accent-yellow transition-colors">platform.openai.com</a>
+                        </p>
+                    </div>
+                    
+                    <!-- Leonardo API Key -->
+                    <div class="mb-6">
+                        <label for="leonardo-key" class="block text-sm font-medium text-gray-400 mb-2">
+                            Leonardo.ai API Key
+                            <span class="text-gray-500 font-normal ml-1">(for generating images)</span>
+                        </label>
+                        <div class="relative">
+                            <input type="password" id="leonardo-key" placeholder="Your Leonardo API key..." autocomplete="off"
+                                   class="input-field pr-12">
+                            <button type="button" id="toggle-leonardo-visibility" 
+                                    class="absolute right-3 top-1/2 -translate-y-1/2 p-2 text-gray-500 hover:text-gray-100 transition-colors"
+                                    title="Show/hide key">
+                                <svg class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                    <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
+                                    <circle cx="12" cy="12" r="3"></circle>
+                                </svg>
+                            </button>
+                        </div>
+                        <p class="mt-2 text-sm text-gray-500">
+                            Get your API key from <a href="https://app.leonardo.ai/settings" target="_blank" class="text-accent-orange hover:text-accent-yellow transition-colors">app.leonardo.ai/settings</a>
+                        </p>
+                    </div>
+                    
+                    <button class="btn btn-primary" id="btn-save-keys">
+                        Continue
+                        <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M5 12h14M12 5l7 7-7 7"/>
+                        </svg>
+                    </button>
+                </div>
+            </section>
+
+            <!-- Step 2: Symbol Descriptions -->
+            <section class="panel" id="panel-symbols">
+                <div class="p-8 border-b border-surface-500">
+                    <h2 class="text-2xl font-semibold mb-2">Symbol Descriptions</h2>
+                    <p class="text-gray-400">Enter a theme and generate <span id="symbols-header-count">57</span> unique symbol descriptions, or customize them manually.</p>
+                </div>
+                <div class="p-8">
+                    <div class="flex gap-4 items-end mb-8 flex-wrap">
+                        <div class="w-40">
+                            <label for="symbol-count" class="block text-sm font-medium text-gray-400 mb-2">Game Size</label>
+                            <select id="symbol-count" class="input-field cursor-pointer">
+                                <option value="7">7 symbols (7 cards, 3/card)</option>
+                                <option value="13">13 symbols (13 cards, 4/card)</option>
+                                <option value="31">31 symbols (31 cards, 6/card)</option>
+                                <option value="57" selected>57 symbols (57 cards, 8/card)</option>
+                            </select>
+                        </div>
+                        <div class="flex-1 min-w-[200px]">
+                            <label for="theme-input" class="block text-sm font-medium text-gray-400 mb-2">Theme (optional)</label>
+                            <input type="text" id="theme-input" placeholder="e.g., animals, space, food, sports..."
+                                   class="input-field">
+                        </div>
+                        <button class="btn btn-secondary whitespace-nowrap" id="btn-generate-descriptions">
+                            <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <path d="M12 2v4m0 12v4M4.93 4.93l2.83 2.83m8.48 8.48l2.83 2.83M2 12h4m12 0h4M4.93 19.07l2.83-2.83m8.48-8.48l2.83-2.83"/>
+                            </svg>
+                            Generate Symbols
+                        </button>
+                    </div>
+                    
+                    <div class="hidden mb-6" id="symbols-progress">
+                        <div class="progress-bar mb-2">
+                            <div class="progress-fill w-0" id="desc-progress-fill"></div>
+                        </div>
+                        <span class="text-sm text-gray-400" id="desc-progress-text">Generating descriptions...</span>
+                    </div>
+
+                    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 max-h-[500px] overflow-y-auto p-1" id="symbols-grid">
+                        <!-- Dynamically populated -->
+                    </div>
+
+                    <!-- Image Style Selection -->
+                    <div class="mt-8 pt-8 border-t border-surface-500">
+                        <div class="flex gap-4 items-end flex-wrap mb-6">
+                            <div class="flex-1 min-w-[200px]">
+                                <label for="leonardo-style" class="block text-sm font-medium text-gray-400 mb-2">
+                                    Image Style
+                                    <span class="text-gray-500 font-normal ml-1">(Leonardo.ai preset)</span>
+                                </label>
+                                <select id="leonardo-style" class="input-field cursor-pointer">
+                                    <option value="3D Render">3D Render</option>
+                                    <option value="Acrylic">Acrylic</option>
+                                    <option value="Creative">Creative</option>
+                                    <option value="Dynamic">Dynamic</option>
+                                    <option value="Fashion">Fashion</option>
+                                    <option value="Game Concept">Game Concept</option>
+                                    <option value="Graphic Design 2D">Graphic Design 2D</option>
+                                    <option value="Graphic Design 3D">Graphic Design 3D</option>
+                                    <option value="Illustration" selected>Illustration</option>
+                                    <option value="None">None</option>
+                                    <option value="Portrait">Portrait</option>
+                                    <option value="Portrait Cinematic">Portrait Cinematic</option>
+                                    <option value="Portrait Fashion">Portrait Fashion</option>
+                                    <option value="Pro B&W Photography">Pro B&W Photography</option>
+                                    <option value="Pro Color Photography">Pro Color Photography</option>
+                                    <option value="Pro Film Photography">Pro Film Photography</option>
+                                    <option value="Ray Traced">Ray Traced</option>
+                                    <option value="Stock Photo">Stock Photo</option>
+                                    <option value="Watercolor">Watercolor</option>
+                                </select>
+                            </div>
+                        </div>
+                        
+                        <div class="flex justify-between items-center">
+                            <button class="btn btn-ghost" id="btn-back-to-api">
+                                <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                    <path d="M19 12H5M12 19l-7-7 7-7"/>
+                                </svg>
+                                Back
+                            </button>
+                            <button class="btn btn-primary" id="btn-generate-images" disabled>
+                                Generate Images
+                                <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                    <path d="M5 12h14M12 5l7 7-7 7"/>
+                                </svg>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Step 3: Image Generation -->
+            <section class="panel" id="panel-generate">
+                <div class="p-8 border-b border-surface-500">
+                    <h2 class="text-2xl font-semibold mb-2">Generating Images</h2>
+                    <p class="text-gray-400">Creating <span id="generate-header-count">57</span> unique symbol images using AI. This may take a few minutes.</p>
+                </div>
+                <div class="p-8">
+                    <div class="mb-8">
+                        <div class="progress-bar h-3 mb-2">
+                            <div class="progress-fill w-0" id="image-progress-fill"></div>
+                        </div>
+                        <span class="text-sm text-gray-400" id="image-progress-text">0 / 57 images generated</span>
+                    </div>
+                    
+                    <div class="grid grid-cols-[repeat(auto-fill,minmax(80px,1fr))] gap-3 max-h-[400px] overflow-y-auto" id="generated-images-grid">
+                        <!-- Dynamically populated -->
+                    </div>
+
+                    <div class="flex justify-end mt-8 pt-8 border-t border-surface-500">
+                        <button class="btn btn-ghost" id="btn-cancel-generation">
+                            Cancel
+                        </button>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Step 4: Preview & Print -->
+            <section class="panel" id="panel-preview">
+                <div class="p-8 border-b border-surface-500">
+                    <h2 class="text-2xl font-semibold mb-2">Your Spot It Cards</h2>
+                    <p class="text-gray-400"><span id="preview-card-count">57</span> cards generated! Each pair of cards shares exactly one matching symbol.</p>
+                </div>
+                <div class="p-8">
+                    <div class="flex gap-4 justify-center mb-8 flex-wrap">
+                        <button class="btn btn-secondary" id="btn-browser-print">
+                            <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <polyline points="6 9 6 2 18 2 18 9"></polyline>
+                                <path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"></path>
+                                <rect x="6" y="14" width="12" height="8"></rect>
+                            </svg>
+                            Print from Browser
+                        </button>
+                        <button class="btn btn-primary" id="btn-download-pdf">
+                            <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                                <polyline points="7 10 12 15 17 10"></polyline>
+                                <line x1="12" y1="15" x2="12" y2="3"></line>
+                            </svg>
+                            Download PDF
+                        </button>
+                    </div>
+
+                    <div class="grid grid-cols-[repeat(auto-fill,minmax(180px,1fr))] gap-6 max-h-[600px] overflow-y-auto p-2" id="cards-preview">
+                        <!-- Dynamically populated -->
+                    </div>
+
+                    <div class="flex justify-start mt-8 pt-8 border-t border-surface-500">
+                        <button class="btn btn-ghost" id="btn-start-over">
+                            <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/>
+                                <path d="M3 3v5h5"/>
+                            </svg>
+                            Start Over
+                        </button>
+                    </div>
+                </div>
+            </section>
+        </main>
+
+        <!-- Print Container (hidden, used for printing) -->
+        <div class="print-container hidden" id="print-container">
+            <!-- Dynamically populated for printing -->
+        </div>
+    </div>
+
+    <!-- Toast Notifications -->
+    <div class="fixed bottom-8 right-8 flex flex-col gap-3 z-50" id="toast-container"></div>
+
+    <script type="module" src="/src/main.js"></script>
+</body>
+</html>
