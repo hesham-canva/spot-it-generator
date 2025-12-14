@@ -27,8 +27,66 @@ const state = {
     abortController: null
 };
 
+// Storage key for persistence
+const STORAGE_KEY = 'spotit_state';
+
 // DOM Elements
 let elements = {};
+
+/**
+ * Save state to localStorage
+ */
+function saveState() {
+    const stateToSave = {
+        currentStep: state.currentStep,
+        symbolCount: state.symbolCount,
+        order: state.order,
+        descriptions: state.descriptions,
+        cards: state.cards,
+        layouts: state.layouts,
+        // Images are saved separately via API.cacheImage
+        hasImages: state.images.filter(img => img).length > 0
+    };
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(stateToSave));
+}
+
+/**
+ * Load state from localStorage
+ * @returns {boolean} True if state was restored
+ */
+function loadState() {
+    try {
+        const saved = localStorage.getItem(STORAGE_KEY);
+        if (!saved) return false;
+        
+        const savedState = JSON.parse(saved);
+        
+        // Restore state
+        state.currentStep = savedState.currentStep || 1;
+        state.symbolCount = savedState.symbolCount || 57;
+        state.order = savedState.order || 7;
+        state.descriptions = savedState.descriptions || [];
+        state.cards = savedState.cards || [];
+        state.layouts = savedState.layouts || [];
+        
+        // Restore images from cache
+        if (savedState.hasImages) {
+            state.images = API.getAllCachedImages(state.symbolCount);
+        }
+        
+        return state.currentStep > 1 || state.descriptions.length > 0;
+    } catch (e) {
+        console.error('Failed to load saved state:', e);
+        return false;
+    }
+}
+
+/**
+ * Clear saved state
+ */
+function clearSavedState() {
+    localStorage.removeItem(STORAGE_KEY);
+}
 
 /**
  * Initialize the application
@@ -36,10 +94,96 @@ let elements = {};
 function init() {
     cacheElements();
     bindEvents();
-    initializeSymbolsGrid();
     checkSavedApiKeys();
-    generateCardConfigurations();
+    
+    // Try to restore saved state
+    const hasRestoredState = loadState();
+    
+    if (hasRestoredState) {
+        // Update symbol count dropdown
+        if (elements.symbolCountSelect) {
+            elements.symbolCountSelect.value = state.symbolCount.toString();
+        }
+        
+        // Initialize grid with restored descriptions
+        initializeSymbolsGrid();
+        
+        // Restore descriptions to input fields
+        if (state.descriptions.length > 0) {
+            const inputs = elements.symbolsGrid.querySelectorAll('input');
+            state.descriptions.forEach((desc, i) => {
+                if (inputs[i]) inputs[i].value = desc;
+            });
+            // Check if all descriptions are filled to enable Generate Images button
+            checkSymbolsComplete();
+        }
+        
+        // Restore images to grid if available
+        if (state.images.length > 0) {
+            restoreImageGrid();
+        }
+        
+        // Generate card configurations
+        generateCardConfigurations();
+        
+        // Go to saved step
+        goToStep(state.currentStep);
+        
+        // Handle step-specific restoration
+        if (state.currentStep === 3 && state.images.filter(img => img).length > 0) {
+            // Restore image grid and show continue button
+            restoreImageGrid();
+            elements.btnContinueToPrint.classList.remove('hidden');
+            elements.btnCancelGeneration.textContent = 'Back to Symbols';
+            elements.imageProgressFill.style.width = '100%';
+            elements.imageProgressText.textContent = `${state.images.filter(img => img).length} / ${state.symbolCount} images generated`;
+        } else if (state.currentStep === 4 && state.images.length > 0) {
+            renderCardsPreview();
+            preparePrintContainer();
+        }
+        
+        showToast('Progress restored! Continue where you left off.', 'success');
+    } else {
+        initializeSymbolsGrid();
+        generateCardConfigurations();
+    }
+    
     updateCountDisplays();
+}
+
+/**
+ * Restore image grid from cached images
+ */
+function restoreImageGrid() {
+    const grid = elements.generatedImagesGrid;
+    if (!grid) return;
+    
+    grid.innerHTML = '';
+    
+    for (let i = 0; i < state.symbolCount; i++) {
+        const imageData = state.images[i];
+        const description = state.descriptions[i] || `Symbol ${i + 1}`;
+        
+        const item = document.createElement('div');
+        item.className = 'image-grid-item';
+        item.id = `image-${i}`;
+        
+        if (imageData) {
+            item.innerHTML = `
+                <img src="${imageData}" alt="${description}" class="w-full h-full object-contain" />
+                <span class="image-label">${description}</span>
+            `;
+        } else {
+            item.innerHTML = `
+                <div class="flex items-center justify-center h-full text-surface-400">
+                    <span class="text-2xl">?</span>
+                </div>
+                <span class="image-label">${description}</span>
+            `;
+        }
+        
+        grid.appendChild(item);
+    }
 }
 
 /**
@@ -74,10 +218,10 @@ function cacheElements() {
         generatedImagesGrid: document.getElementById('generated-images-grid'),
         btnCancelGeneration: document.getElementById('btn-cancel-generation'),
         
-        btnBrowserPrint: document.getElementById('btn-browser-print'),
         btnDownloadPdf: document.getElementById('btn-download-pdf'),
         cardsPreview: document.getElementById('cards-preview'),
         btnStartOver: document.getElementById('btn-start-over'),
+        btnContinueToPrint: document.getElementById('btn-continue-to-print'),
         
         printContainer: document.getElementById('print-container'),
         toastContainer: document.getElementById('toast-container'),
@@ -105,10 +249,69 @@ function bindEvents() {
     
     elements.btnCancelGeneration.addEventListener('click', cancelGeneration);
     
-    elements.btnBrowserPrint.addEventListener('click', browserPrint);
     elements.btnDownloadPdf.addEventListener('click', downloadPdf);
     elements.btnStartOver.addEventListener('click', startOver);
+    elements.btnContinueToPrint.addEventListener('click', continueToPrint);
+    
+    // Step navigation - allow clicking on completed steps
+    elements.steps.forEach(stepEl => {
+        stepEl.addEventListener('click', () => handleStepClick(stepEl));
+    });
 }
+
+/**
+ * Handle click on step indicator
+ */
+function handleStepClick(stepEl) {
+    const stepNum = parseInt(stepEl.dataset.step);
+    
+    // Only allow clicking on completed steps (before current step)
+    if (stepNum >= state.currentStep) {
+        return;
+    }
+    
+    // Navigate to the clicked step
+    navigateToStep(stepNum);
+}
+
+/**
+ * Navigate to a specific step with proper state handling
+ */
+function navigateToStep(step) {
+    // Handle any cleanup needed when leaving current step
+    if (state.currentStep === 3) {
+        // If leaving generation step, cancel any ongoing generation
+        if (state.abortController) {
+            state.abortController.abort();
+            state.abortController = null;
+        }
+    }
+    
+    goToStep(step);
+    
+    // Handle any setup needed when entering the step
+    if (step === 3 && state.images.filter(img => img).length > 0) {
+        // Restore image grid if we have images
+        restoreImageGrid();
+        elements.btnContinueToPrint.classList.remove('hidden');
+        elements.btnCancelGeneration.textContent = 'Back to Symbols';
+        elements.imageProgressFill.style.width = '100%';
+        elements.imageProgressText.textContent = `${state.images.filter(img => img).length} / ${state.symbolCount} images generated`;
+    } else if (step === 4) {
+        renderCardsPreview();
+        preparePrintContainer();
+    }
+}
+
+/**
+ * Continue to print step after reviewing images
+ */
+function continueToPrint() {
+    goToStep(4);
+    renderCardsPreview();
+    preparePrintContainer();
+}
+
 
 /**
  * Handle symbol count change
@@ -267,6 +470,7 @@ async function generateDescriptions() {
         
         showToast(`Generated ${state.symbolCount} symbol descriptions!`, 'success');
         checkSymbolsComplete();
+        saveState(); // Persist descriptions
         
     } catch (error) {
         showToast(error.message, 'error');
@@ -314,6 +518,10 @@ async function startImageGeneration() {
     // Reset progress text with correct count
     elements.imageProgressText.textContent = `0 / ${state.symbolCount} images generated`;
     
+    // Reset button states
+    elements.btnContinueToPrint.classList.add('hidden');
+    elements.btnCancelGeneration.textContent = 'Cancel';
+    
     state.abortController = new AbortController();
     
     try {
@@ -334,12 +542,13 @@ async function startImageGeneration() {
         if (successCount < state.symbolCount) {
             showToast(`Generated ${successCount}/${state.symbolCount} images. Some failed.`, 'warning');
         } else {
-            showToast('All images generated!', 'success');
+            showToast('All images generated! Review them and continue when ready.', 'success');
         }
         
-        goToStep(4);
-        renderCardsPreview();
-        preparePrintContainer();
+        // Show continue button instead of auto-navigating
+        elements.btnContinueToPrint.classList.remove('hidden');
+        elements.btnCancelGeneration.textContent = 'Back to Symbols';
+        saveState();
         
     } catch (error) {
         if (error.message === 'Generation cancelled') {
@@ -510,13 +719,6 @@ function createPrintCard(symbolIndices, layout) {
 }
 
 /**
- * Browser print
- */
-function browserPrint() {
-    window.print();
-}
-
-/**
  * Download PDF
  */
 async function downloadPdf() {
@@ -544,18 +746,39 @@ async function downloadPdf() {
 }
 
 /**
- * Start over
+ * Start over - clear all state and restart
  */
 function startOver() {
+    // Clear state
+    state.currentStep = 1;
     state.descriptions = [];
     state.images = [];
-    API.clearImageCache();
+    state.cards = [];
+    state.layouts = [];
     
+    // Clear caches
+    API.clearImageCache();
+    clearSavedState();
+    
+    // Reset UI
     const inputs = elements.symbolsGrid.querySelectorAll('input');
     inputs.forEach(input => input.value = '');
     
     elements.themeInput.value = '';
     elements.btnGenerateImages.disabled = true;
+    
+    // Clear image grid
+    if (elements.generatedImagesGrid) {
+        elements.generatedImagesGrid.innerHTML = '';
+    }
+    
+    // Clear cards preview
+    if (elements.cardsPreview) {
+        elements.cardsPreview.innerHTML = '';
+    }
+    
+    // Regenerate card configurations
+    generateCardConfigurations();
     
     goToStep(1);
     showToast('Ready to create new cards!', 'success');
@@ -569,19 +792,27 @@ function goToStep(step) {
     
     elements.steps.forEach(stepEl => {
         const stepNum = parseInt(stepEl.dataset.step);
-        stepEl.classList.remove('opacity-100', 'opacity-50');
+        stepEl.classList.remove('opacity-100', 'opacity-50', 'step-clickable', 'step-active', 'border-surface-500');
         
         const badge = stepEl.querySelector('.step-badge');
+        const label = stepEl.querySelector('.step-label');
         badge.classList.remove('step-badge-active', 'step-badge-completed');
+        label.classList.remove('text-gray-100', 'text-gray-400');
         
         if (stepNum < step) {
-            stepEl.classList.add('opacity-100');
+            // Completed step
+            stepEl.classList.add('opacity-100', 'step-clickable', 'border-surface-500');
             badge.classList.add('step-badge-completed');
+            label.classList.add('text-gray-100');
         } else if (stepNum === step) {
-            stepEl.classList.add('opacity-100');
+            // Current step
+            stepEl.classList.add('opacity-100', 'step-active');
             badge.classList.add('step-badge-active');
+            label.classList.add('text-gray-100');
         } else {
-            stepEl.classList.add('opacity-50');
+            // Future step
+            stepEl.classList.add('opacity-50', 'border-surface-500');
+            label.classList.add('text-gray-400');
         }
     });
     
@@ -599,6 +830,9 @@ function goToStep(step) {
     if (panelMap[step]) {
         panelMap[step].classList.add('active');
     }
+    
+    // Save state when navigating steps
+    saveState();
 }
 
 /**

@@ -101,51 +101,67 @@ export function verifyCards(cards) {
 export function generateAllLayouts(numCards, symbolsPerCard = 8, cardSize = 200) {
     const layouts = [];
     
-    // Seed-based pseudo-random for consistency
+    // Seeded random for consistent shuffling
     const seededRandom = (seed) => {
-        const x = Math.sin(seed) * 10000;
+        const x = Math.sin(seed * 9999) * 10000;
         return x - Math.floor(x);
     };
     
-    // Predefined size categories for variety (like real Spot It)
-    // Increased sizes: Large, medium-large, medium, medium-small, small
-    const sizeCategories = [0.42, 0.38, 0.34, 0.30, 0.26, 0.22];
+    // Seeded shuffle function
+    const seededShuffle = (array, seed) => {
+        const shuffled = [...array];
+        for (let i = shuffled.length - 1; i > 0; i--) {
+            const j = Math.floor(seededRandom(seed + i) * (i + 1));
+            [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
+        }
+        return shuffled;
+    };
     
+    // Calculate grid dimensions based on number of symbols
+    const getGridDimensions = (n) => {
+        if (n <= 2) return { cols: 2, rows: 1 };
+        if (n <= 4) return { cols: 2, rows: 2 };
+        if (n <= 6) return { cols: 3, rows: 2 };
+        if (n <= 9) return { cols: 3, rows: 3 };
+        return { cols: 4, rows: Math.ceil(n / 4) };
+    };
+    
+    const { cols, rows } = getGridDimensions(symbolsPerCard);
+    const padding = cardSize * 0.08; // Padding from card edges
+    const availableWidth = cardSize - padding * 2;
+    const availableHeight = cardSize - padding * 2;
+    
+    const cellWidth = availableWidth / cols;
+    const cellHeight = availableHeight / rows;
+    
+    // Symbol size fits within cell with some margin
+    const symbolSize = Math.min(cellWidth, cellHeight) * 0.85;
+    
+    // Generate base grid positions
+    const basePositions = [];
+    for (let i = 0; i < symbolsPerCard; i++) {
+        const col = i % cols;
+        const row = Math.floor(i / cols);
+        
+        // Center symbol in its cell
+        const cellX = padding + col * cellWidth;
+        const cellY = padding + row * cellHeight;
+        const x = cellX + (cellWidth - symbolSize) / 2;
+        const y = cellY + (cellHeight - symbolSize) / 2;
+        
+        basePositions.push({ 
+            x, 
+            y, 
+            size: symbolSize, 
+            rotation: 0  // No rotation
+        });
+    }
+    
+    // For each card, shuffle the positions
     for (let cardIndex = 0; cardIndex < numCards; cardIndex++) {
-        const positions = [];
-        const center = cardSize / 2;
-        const baseRadius = cardSize * 0.28; // Smaller radius to keep bigger images in bounds
-        
-        // Shuffle size assignments for this card
-        const shuffledSizes = [...sizeCategories];
-        for (let i = shuffledSizes.length - 1; i > 0; i--) {
-            const swapIdx = Math.floor(seededRandom(cardIndex * 50 + i) * (i + 1));
-            [shuffledSizes[i], shuffledSizes[swapIdx]] = [shuffledSizes[swapIdx], shuffledSizes[i]];
-        }
-        
-        for (let i = 0; i < symbolsPerCard; i++) {
-            const seed = cardIndex * 100 + i;
-            const angleOffset = seededRandom(seed) * 0.4 - 0.2;
-            const angle = (i / symbolsPerCard) * Math.PI * 2 + angleOffset;
-            
-            // Get size from shuffled categories, with some randomness
-            const baseSizeRatio = shuffledSizes[i % shuffledSizes.length];
-            const sizeVariation = 1 + (seededRandom(seed + 2) * 0.15 - 0.075); // ±7.5%
-            const size = cardSize * baseSizeRatio * sizeVariation;
-            
-            // Spread symbols evenly, larger ones slightly toward center
-            const sizeInfluence = baseSizeRatio / 0.42; // Normalize to 0-1
-            const distVariation = seededRandom(seed + 1) * 0.25 + 0.6;
-            const dist = baseRadius * distVariation * (1.2 - sizeInfluence * 0.4);
-            
-            const x = center + Math.cos(angle) * dist - size / 2;
-            const y = center + Math.sin(angle) * dist - size / 2;
-            const rotation = seededRandom(seed + 3) * 360;
-            
-            positions.push({ x, y, size, rotation });
-        }
-        
-        layouts.push(positions);
+        // Use card index as seed for consistent but different shuffles
+        const shuffledPositions = seededShuffle(basePositions, cardIndex * 137);
+        layouts.push(shuffledPositions);
     }
     
     return layouts;

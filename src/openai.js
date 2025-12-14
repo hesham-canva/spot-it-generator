@@ -243,7 +243,7 @@ export async function generateImage(description, index = 0) {
   if (!key) {
     throw new Error("Leonardo API key not set");
   }
-  const prompt = `A single ${description}, just one, not multiple. Centered composition, completely white background, no text, no duplicates, only one subject in the image. Clean icon style suitable for a card game symbol. There should be no frames or cirlces, only the subject.`;
+  const prompt = `A single ${description}, just one, not multiple. Centered composition, completely white background, no text, no duplicates, only one subject in the image. Clean, icon style suitable for a card game symbol. There should be no frames or cirlces, only the subject.`;
 
   try {
     // Step 1: Create a generation request using V2 API with Nano Banana

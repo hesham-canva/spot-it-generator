@@ -19,28 +19,28 @@
         </header>
 
         <!-- Step Indicator -->
-        <div class="flex items-center justify-center gap-0 mb-12 px-8 flex-wrap">
-            <div class="step flex items-center gap-3 px-5 py-3 rounded-full bg-surface-800 border border-accent-orange opacity-100 shadow-[0_0_30px_rgba(255,107,53,0.3)]" data-step="1">
+        <div class="flex items-center justify-center gap-0 mb-8 px-8 flex-wrap">
+            <div class="step step-active flex items-center gap-3 px-5 py-3 rounded-full bg-surface-800 border opacity-100" data-step="1">
                 <span class="step-badge step-badge-active">1</span>
-                <span class="text-sm font-medium text-gray-100">API Keys</span>
+                <span class="step-label text-sm font-medium">API Keys</span>
             </div>
             <div class="w-10 h-0.5 bg-surface-500"></div>
             <div class="step flex items-center gap-3 px-5 py-3 rounded-full bg-surface-800 border border-surface-500 opacity-50" data-step="2">
                 <span class="step-badge">2</span>
-                <span class="text-sm font-medium text-gray-400">Symbols</span>
+                <span class="step-label text-sm font-medium text-gray-400">Symbols</span>
             </div>
             <div class="w-10 h-0.5 bg-surface-500"></div>
             <div class="step flex items-center gap-3 px-5 py-3 rounded-full bg-surface-800 border border-surface-500 opacity-50" data-step="3">
                 <span class="step-badge">3</span>
-                <span class="text-sm font-medium text-gray-400">Generate</span>
+                <span class="step-label text-sm font-medium text-gray-400">Generate</span>
             </div>
             <div class="w-10 h-0.5 bg-surface-500"></div>
             <div class="step flex items-center gap-3 px-5 py-3 rounded-full bg-surface-800 border border-surface-500 opacity-50" data-step="4">
                 <span class="step-badge">4</span>
-                <span class="text-sm font-medium text-gray-400">Print</span>
+                <span class="step-label text-sm font-medium text-gray-400">Print</span>
             </div>
         </div>
-
+        
         <!-- Main Content -->
         <main>
             <!-- Step 1: API Keys -->
@@ -214,9 +214,15 @@
                         <!-- Dynamically populated -->
                     </div>
 
-                    <div class="flex justify-end mt-8 pt-8 border-t border-surface-500">
+                    <div class="flex justify-between items-center mt-8 pt-8 border-t border-surface-500">
                         <button class="btn btn-ghost" id="btn-cancel-generation">
                             Cancel
+                        </button>
+                        <button class="btn btn-primary hidden" id="btn-continue-to-print">
+                            Continue to Print
+                            <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <path d="M5 12h14M12 5l7 7-7 7"/>
+                            </svg>
                         </button>
                     </div>
                 </div>
@@ -230,14 +236,6 @@
                 </div>
                 <div class="p-8">
                     <div class="flex gap-4 justify-center mb-8 flex-wrap">
-                        <button class="btn btn-secondary" id="btn-browser-print">
-                            <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                                <polyline points="6 9 6 2 18 2 18 9"></polyline>
-                                <path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"></path>
-                                <rect x="6" y="14" width="12" height="8"></rect>
-                            </svg>
-                            Print from Browser
-                        </button>
                         <button class="btn btn-primary" id="btn-download-pdf">
                             <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                                 <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>

@@ -77,6 +77,23 @@
     @apply bg-emerald-500 text-surface-900;
   }
 
+  .step-active {
+    @apply border-accent-orange;
+    box-shadow: 0 0 30px rgba(255, 107, 53, 0.3);
+  }
+
+  .step-active .step-label {
+    @apply text-gray-100;
+  }
+
+  .step-clickable {
+    @apply cursor-pointer hover:scale-105 transition-transform duration-200;
+  }
+  
+  .step-clickable:hover {
+    @apply shadow-[0_0_20px_rgba(16,185,129,0.3)];
+  }
+
   .progress-bar {
     @apply h-2 bg-surface-700 rounded-full overflow-hidden;
   }

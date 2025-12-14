@@ -103,6 +103,15 @@ spot-it/
 └── postcss.config.js       # PostCSS configuration
 ```
 
+## TODO
+
+- Feat: Regenerate a single image
+- Feat: Skip the text input step, bulk upload own images
+- ✅ Feat: Allow continuing the process after reloading page. Add a reset button to restart the flow.
+- Feat: Add a image style, eg. Cute, cool
+- Feat: add a separate page to create a printout for a box to hold the cards
+- ✅ Fix: Card images are overlapping on the PDF, change the placement algorithnm to just use a grid layout, no rotation required.
+
 ## Cost Estimate
 
 Approximate API costs:
