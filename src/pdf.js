@@ -123,9 +123,9 @@ export async function generatePDF(cards, images, layouts, onProgress = null) {
     const pageWidth = 8.5;
     const pageHeight = 11;
     const margin = 0.5;
-    const cardsPerRow = 3;
-    const cardsPerCol = 3;
-    const cardsPerPage = cardsPerRow * cardsPerCol;
+    const cardsPerRow = 2;
+    const cardsPerCol = 2;
+    const cardsPerPage = cardsPerRow * cardsPerCol; // 4 cards per page
     
     const cardWidth = (pageWidth - margin * 2) / cardsPerRow;
     const cardHeight = (pageHeight - margin * 2) / cardsPerCol;
@@ -188,7 +188,7 @@ async function drawCard(pdf, symbolIndices, images, layout, x, y, size) {
     // Draw symbols using the same layout as web preview
     const layoutSize = 200; // Original layout is based on 200px
     const scale = size / layoutSize;
-    const padding = size * 0.05;
+    const padding = size * 0.02; // Minimal padding
     
     for (let i = 0; i < symbolIndices.length; i++) {
         const symbolIndex = symbolIndices[i];

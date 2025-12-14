@@ -127,7 +127,7 @@ export function generateAllLayouts(numCards, symbolsPerCard = 8, cardSize = 200)
     };
     
     const { cols, rows } = getGridDimensions(symbolsPerCard);
-    const padding = cardSize * 0.08; // Padding from card edges
+    const padding = cardSize * 0.04; // Reduced padding from card edges
     const availableWidth = cardSize - padding * 2;
     const availableHeight = cardSize - padding * 2;
     
